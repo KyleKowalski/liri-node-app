@@ -119,7 +119,22 @@ function getSpotify() {
             if (err) {
                 return console.log('Error occurred: ' + err);
             }
-        console.log(data); 
+            // console.log(data)
+            var songCount = 1;
+            data.tracks.items.forEach(function(songListing){
+                let artist = songListing.album.artists[0].name;
+                let song = songListing.name;
+                let songUrl = songListing.album.artists[0].external_urls.spotify;
+                let album = songListing.album.name;
+                console.log("\n=====")
+                console.log(songCount + ". Artist: " + artist);
+                console.log(songCount + ". Song: " + song);
+                console.log(songCount + ". Song URL: " + songUrl);
+                console.log(songCount + ". Album: " + album);
+                songCount++;
+                console.log("=====")
+            });
+            mainPrompt();
         });
     });
 }
@@ -128,18 +143,6 @@ function quit() {
     console.log("\n=====\nHave a great day!\n\nGood Bye!\n=====");
 }
 
-//    * `spotify-this-song`
-// * This will show the following information about the song in your terminal/bash window
-
-// * Artist(s)
-
-// * The song's name
-
-// * A preview link of the song from Spotify
-
-// * The album that the song is from
-
-// * If no song is provided then your program will default to "The Sign" by Ace of Base.
 //    * `movie-this`
 
 //    * `do-what-it-says`
