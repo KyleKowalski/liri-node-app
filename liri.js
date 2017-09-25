@@ -3,6 +3,15 @@
 var inquirer = require('inquirer');
 var twitter = require('twitter');
 
+var client = new twitter({
+    consumer_key: 'XpwYmcM6kmT4wDRaK7bHzkzkf',
+    consumer_secret: 'fbNgKAwUke33mWbC9AEk9NZ823WMpXkVqNqVVHeWcOXGFV35ja',
+    access_token_key: '80392403-Rhy2uiDhmuq2Rz5NQ4E9wEM5KV9jGSAFTh0AOFrCx',
+    access_token_secret: 'VEZKh2UhfH4mSdYnB9QNAlwPEQwYUcnCfFEq56uSw8GfF'
+  });
+   
+  var params = {screen_name: 'KyleKowalski'};
+
 mainPrompt();
 
 function mainPrompt() {
@@ -11,19 +20,21 @@ function mainPrompt() {
             {
                 type: "list",
                 message: "\n\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
-                choices: ["Twitter", "Spotify", "OMDB"],
+                choices: ["Twitter", "Spotify", "OMDB", "Quit"],
                 name: "mainPromptChoice"
             }
         ]).then(function(response) {
             if (response.mainPromptChoice === 'Twitter') {
-                console.log("I guess we need twitter now...");
                 getTwitter();
             }
             else if (response.mainPromptChoice === 'Spotify') {
-                console.log("I guess we need spotify now");
+                console.log("I guess we need spotify now"); // TODO
             }
             else if (response.mainPromptChoice === 'OMDB') {
-                console.log("I guess we need OMDB now...");
+                console.log("I guess we need OMDB now..."); // TODO
+            }
+            else if (response.mainPromptChoice === 'Quit') {
+                quit();
             }
             else {
                 console.log("We've escaped the main prompt choice somehow - log an error")
@@ -32,34 +43,87 @@ function mainPrompt() {
 }
 
 function getTwitter() {
-    console.log("annnd we have twitter... what to do with it?");
-    var client = new twitter({
-        consumer_key: 'XpwYmcM6kmT4wDRaK7bHzkzkf',
-        consumer_secret: 'fbNgKAwUke33mWbC9AEk9NZ823WMpXkVqNqVVHeWcOXGFV35ja',
-        access_token_key: '80392403-Rhy2uiDhmuq2Rz5NQ4E9wEM5KV9jGSAFTh0AOFrCx',
-        access_token_secret: 'VEZKh2UhfH4mSdYnB9QNAlwPEQwYUcnCfFEq56uSw8GfF'
-      });
-       
-      var params = {screen_name: 'KyleKowalski'};
-      client.get('statuses/user_timeline', params, function(error, tweetsArray, response) {
+      client.get('statuses/user_timeline', params, function(error, tweetArray, response) {
         if (!error) {
-            console.log("List of tweets in descending order:");
+            console.log("Recent Tweets:");
             var tweetCount = 1;
-            tweetsArray.forEach(function (tweet){
+            tweetArray.forEach(function (tweet){
+                if (tweetCount > 20) {
+                    // TODO
+                }
                 console.log(tweetCount + ". (" + tweet.created_at + ") : " + tweet.text);
                 tweetCount++;
             });
         }
+        afterTwitterPrompt();
       });
 }
-// TODO create these:
-//    * `my-tweets`
 
-// function my-tweets () {
-    // TODO use the 'request' npm package (it does the ajax stuffs)
+function createTweet() {
+    inquirer
+        .prompt([
+            {
+                type: "input",
+                message: "Please enter your tweet?",
+                name: "tweetText"
+            }
+        ])
+        .then(function(response){
+            console.log("creating tweet wtih text: >" + response.tweetText + "<")
 
-// }
-// * This will show your last 20 tweets and when they were created at in your terminal/bash window.
+            client.post('statuses/update', {status: response.tweetText},  function(error, tweet, response) {
+                if(error) throw error;
+                // console.log(tweet);  // Tweet body. 
+                // console.log(response);  // Raw response object. 
+                getTwitter();
+              });
+        });
+}
+
+function promptForNewTweet() {
+    var textForTweet = ""
+    inquirer
+        .prompt([
+        {
+            type: "input",
+            message: "Please enter your tweet?",
+            name: "tweetText"
+        }
+        ])
+        .then(function(response){
+            textForTweet = response.tweetText
+        });
+    return textForTweet;
+}
+
+function afterTwitterPrompt() {
+    inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "\n=====\nAbove are recent tweets - next selection?\n=====",
+                choices: ["Main Menu", "New Tweet", "Quit"],
+                name: "mainPromptChoice"
+            }
+        ]).then(function(response) {
+            if (response.mainPromptChoice === 'Main Menu') {
+                mainPrompt();
+            }
+            else if (response.mainPromptChoice === 'New Tweet') {
+                createTweet();
+            }
+            else if (response.mainPromptChoice === 'Quit') {
+                quit();
+            }
+            else {
+                console.log("We've escaped the main prompt choice somehow - log an error")
+            }
+        })
+}
+
+function quit() {
+    console.log("\n=====\nHave a great day!\n\nGood Bye!\n=====");
+}
 
 //    * `spotify-this-song`
 // * This will show the following information about the song in your terminal/bash window
