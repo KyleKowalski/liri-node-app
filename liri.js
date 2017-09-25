@@ -1,49 +1,45 @@
 // grab data from keys and store it into a variable
-
+var keysFile = require('./keys.js')
 var inquirer = require('inquirer');
 var twitter = require('twitter');
+var twitterClient = new twitter(keysFile.twitterKeys);
+var Spotify = require('node-spotify-api');
+var spotifyClient = new Spotify(keysFile.spotifyKeys);
 
-var client = new twitter({
-    consumer_key: 'XpwYmcM6kmT4wDRaK7bHzkzkf',
-    consumer_secret: 'fbNgKAwUke33mWbC9AEk9NZ823WMpXkVqNqVVHeWcOXGFV35ja',
-    access_token_key: '80392403-Rhy2uiDhmuq2Rz5NQ4E9wEM5KV9jGSAFTh0AOFrCx',
-    access_token_secret: 'VEZKh2UhfH4mSdYnB9QNAlwPEQwYUcnCfFEq56uSw8GfF'
-  });
    
-  var params = {screen_name: 'KyleKowalski'};
+var params = {screen_name: 'KyleKowalski'};
 
 mainPrompt();
 
 function mainPrompt() {
-    inquirer
-        .prompt([
-            {
-                type: "list",
-                message: "\n\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
-                choices: ["Twitter", "Spotify", "OMDB", "Quit"],
-                name: "mainPromptChoice"
-            }
-        ]).then(function(response) {
-            if (response.mainPromptChoice === 'Twitter') {
-                getTwitter();
-            }
-            else if (response.mainPromptChoice === 'Spotify') {
-                console.log("I guess we need spotify now"); // TODO
-            }
-            else if (response.mainPromptChoice === 'OMDB') {
-                console.log("I guess we need OMDB now..."); // TODO
-            }
-            else if (response.mainPromptChoice === 'Quit') {
-                quit();
-            }
-            else {
-                console.log("We've escaped the main prompt choice somehow - log an error")
-            }
-        })
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "\n\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
+            choices: ["Twitter", "Spotify", "OMDB", "Quit"],
+            name: "mainPromptChoice"
+        }
+    ]).then(function(response) {
+        if (response.mainPromptChoice === 'Twitter') {
+            getTwitter();
+        }
+        else if (response.mainPromptChoice === 'Spotify') {
+            getSpotify();
+        }
+        else if (response.mainPromptChoice === 'OMDB') {
+            console.log("I guess we need OMDB now..."); // TODO
+        }
+        else if (response.mainPromptChoice === 'Quit') {
+            quit();
+        }
+        else {
+            console.log("We've escaped the main prompt choice somehow - log an error")
+        }
+    })
 }
 
 function getTwitter() {
-      client.get('statuses/user_timeline', params, function(error, tweetArray, response) {
+    twitterClient.get('statuses/user_timeline', params, function(error, tweetArray, response) {
         if (!error) {
             console.log("Recent Tweets:");
             var tweetCount = 1;
@@ -56,69 +52,76 @@ function getTwitter() {
             });
         }
         afterTwitterPrompt();
-      });
+    });
 }
 
 function createTweet() {
-    inquirer
-        .prompt([
-            {
-                type: "input",
-                message: "Please enter your tweet?",
-                name: "tweetText"
-            }
-        ])
-        .then(function(response){
-            console.log("creating tweet wtih text: >" + response.tweetText + "<")
-
-            client.post('statuses/update', {status: response.tweetText},  function(error, tweet, response) {
-                if(error) throw error;
-                // console.log(tweet);  // Tweet body. 
-                // console.log(response);  // Raw response object. 
-                getTwitter();
-              });
-        });
-}
-
-function promptForNewTweet() {
-    var textForTweet = ""
-    inquirer
-        .prompt([
+    inquirer.prompt([
         {
             type: "input",
             message: "Please enter your tweet?",
             name: "tweetText"
         }
-        ])
-        .then(function(response){
-            textForTweet = response.tweetText
+    ]).then(function(response){
+        if (response.tweetText === "") {
+            console.log("Unable to create empty tweets - returning you to twitter main menu");
+            getTwitter();
+            return;
+        }
+
+        twitterClient.post('statuses/update', {status: response.tweetText},  function(error, tweet, response) {
+            if(error) throw error;
+            getTwitter();
         });
-    return textForTweet;
+    });
 }
 
 function afterTwitterPrompt() {
-    inquirer
-        .prompt([
-            {
-                type: "list",
-                message: "\n=====\nAbove are recent tweets - next selection?\n=====",
-                choices: ["Main Menu", "New Tweet", "Quit"],
-                name: "mainPromptChoice"
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "\n=====\nAbove are recent tweets - next selection?\n=====",
+            choices: ["Main Menu", "New Tweet", "Quit"],
+            name: "mainPromptChoice"
+        }
+    ]).then(function(response) {
+        if (response.mainPromptChoice === 'Main Menu') {
+            mainPrompt();
+        }
+        else if (response.mainPromptChoice === 'New Tweet') {
+            createTweet();
+        }
+        else if (response.mainPromptChoice === 'Quit') {
+            quit();
+        }
+        else {
+            console.log("We've escaped the main prompt choice somehow - log an error")
+        }
+    });
+}
+
+function getSpotify() {
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "What song (track) would you like to look up?",
+            name: "spotifyRequest"
+        }
+    ]).then(function(response){
+        console.log("Spotify Request With : >" + response.spotifyRequest + "<")
+
+        if (response.spotifyRequest === ""){
+            response.spotifyRequest = "The Sign" // TODO verify this gives ace of base
+            console.log('Since you gave no search term, you get "The Sign" by Ace of Base - enjoy!');
+        }
+
+        spotifyClient.search({ type: 'track', query: response.spotifyRequest }, function(err, data) {
+            if (err) {
+                return console.log('Error occurred: ' + err);
             }
-        ]).then(function(response) {
-            if (response.mainPromptChoice === 'Main Menu') {
-                mainPrompt();
-            }
-            else if (response.mainPromptChoice === 'New Tweet') {
-                createTweet();
-            }
-            else if (response.mainPromptChoice === 'Quit') {
-                quit();
-            }
-            else {
-                console.log("We've escaped the main prompt choice somehow - log an error")
-            }
-        })
+        console.log(data); 
+        });
+    });
 }
 
 function quit() {
