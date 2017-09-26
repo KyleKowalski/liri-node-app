@@ -16,7 +16,7 @@ function mainPrompt() {
     inquirer.prompt([
         {
             type: "list",
-            message: "\n\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
+            message: "\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
             choices: ["Twitter", "Spotify", "OMDB", "Do What It Says", "Quit"],
             name: "mainPromptChoice"
         }
@@ -63,7 +63,7 @@ function createTweet() {
     inquirer.prompt([
         {
             type: "input",
-            message: "Please enter your tweet?",
+            message: "Please enter your tweet:",
             name: "tweetText"
         }
     ]).then(function(response){
@@ -155,50 +155,27 @@ function getOMDB() {
             name: "movieRequest"
         }
     ]).then(function(response){
-        console.log("Spotify Request With : >" + response.movieRequest + "<")
 
         if (response.movieRequest === ""){
-            response.movieRequest = "Mr Nobody" // TODO verify this gives ace of base
+            response.movieRequest = "Mr Nobody"
             console.log('Since you gave no search term, you get "Mr Nobody" - enjoy!');
         }
-
-        ;
         
-        // Then run a request to the OMDB API with the movie specified
-        request("http://www.omdbapi.com/?t=" + response.movieRequest + "s&y=&plot=short&apikey=40e9cece", function(error, response, body) {
+        request("http://www.omdbapi.com/?t=" + response.movieRequest + "&y=&plot=short&apikey=40e9cece", function(error, response, body) {
         
-          // If the request is successful (i.e. if the response status code is 200)
           if (!error && response.statusCode === 200) {
         
-            // Parse the body of the site and recover just the imdbRating
-            // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
-            console.log("The movie's rating is: " + JSON.parse(body).imdbRating);
+            console.log("Movie title: " + JSON.parse(body).Title); 
+            console.log("Year released: " + JSON.parse(body).Year);
+            console.log("IMDB rating: " + JSON.parse(body).imdbRating);
+            console.log("Rotten Tomatoes rating: " + JSON.parse(body).Ratings[0].Value);
+            console.log("Country released: " + JSON.parse(body).Country);
+            console.log("Language of movie: " + JSON.parse(body).Language);
+			console.log("Plot: " + JSON.parse(body).Plot);
+			console.log("Actors: " + JSON.parse(body).Actors);
           }
+          mainPrompt();
         });
-        
-
-
-        // spotifyClient.search({ type: 'track', query: response.movieRequest }, function(err, data) {
-        //     if (err) {
-        //         return console.log('Error occurred: ' + err);
-        //     }
-        //     // console.log(data)
-        //     var songCount = 1;
-        //     data.tracks.items.forEach(function(songListing){
-        //         let artist = songListing.album.artists[0].name;
-        //         let song = songListing.name;
-        //         let songUrl = songListing.album.artists[0].external_urls.spotify;
-        //         let album = songListing.album.name;
-        //         console.log("\n=====")
-        //         console.log(songCount + ". Artist: " + artist);
-        //         console.log(songCount + ". Song: " + song);
-        //         console.log(songCount + ". Song URL: " + songUrl);
-        //         console.log(songCount + ". Album: " + album);
-        //         songCount++;
-        //         console.log("=====")
-        //     });
-        //     mainPrompt();
-        // });
     });
 }
 
