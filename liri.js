@@ -193,7 +193,7 @@ function getOMDB() {
 }
 
 function doWhatTheRandomFileSays() {
-    console.log("wooo - crazy us - going with the random file?!");
+    console.log("wooo - crazy you - going with the random file?!");
     fs.readFile("random.txt", "utf8", function(error, data) {
         if (error) {
             return console.log(error);
@@ -202,9 +202,8 @@ function doWhatTheRandomFileSays() {
         var dataArray = data.split(",");
         
         if (dataArray[0] === "searchSpotify") {
-            searchSpotify(dataArray[1], dataArray[2])
+            searchSpotify(dataArray[1], dataArray[2]);
         }
-
     });
 }
 // TODO - log out each command as it is input into log.txt
