@@ -1,15 +1,20 @@
-// grab data from keys and store it into a variable
+// Keys for Twiter and Spotify - these will be redacted later.  
 var keysFile = require('./keys.js')
+// General use - cleaner user input
 var inquirer = require('inquirer');
+// Twitter
+var params = {screen_name: 'KyleKowalski'};
 var twitter = require('twitter');
 var twitterClient = new twitter(keysFile.twitterKeys);
+// Spotify
 var Spotify = require('node-spotify-api');
 var spotifyClient = new Spotify(keysFile.spotifyKeys);
-var request = require("request") // for OMDB
+// OMDB (uses a general item, not a specific one for OMDB)
+var request = require("request") 
+// File system interaction
 var fs = require("fs");
 
-   
-var params = {screen_name: 'KyleKowalski'};
+logThis("\n\n=====\nStarting new session\n=====\n");
 
 mainPrompt();
 
@@ -23,18 +28,23 @@ function mainPrompt() {
         }
     ]).then(function(response) { // TODO replace with case
         if (response.mainPromptChoice === 'Twitter') {
+            logThis("Main prompt selection:  Twitter\n");
             getTwitter();
         }
         else if (response.mainPromptChoice === 'Spotify') {
+            logThis("Main prompt selection:  Spotify\n");
             getSpotify();
         }
         else if (response.mainPromptChoice === 'OMDB') {
+            logThis("Main prompt selection:  OMDB\n");
             getOMDB();
         }
         else if (response.mainPromptChoice === 'Do What The Random File Says') {
+            logThis("Main prompt selection:  Random File ooooOOOoooohhh\n");
             doWhatTheRandomFileSays();
         }
         else if (response.mainPromptChoice === 'Quit') {
+            logThis("Main prompt selection:  Quit\n");
             quit();
         }
         else {
@@ -61,6 +71,7 @@ function getTwitter() {
 }
 
 function createTweet() {
+    logThis("Selected create new Tweet.\n");
     inquirer.prompt([
         {
             type: "input",
@@ -69,6 +80,7 @@ function createTweet() {
         }
     ]).then(function(response){
         if (response.tweetText === "") {
+            logThis("Tweet was empty - returned user to main menu\n");
             console.log("Unable to create empty tweets - returning you to twitter main menu");
             getTwitter();
             return;
@@ -76,6 +88,7 @@ function createTweet() {
 
         twitterClient.post('statuses/update', {status: response.tweetText},  function(error, tweet, response) {
             if(error) throw error;
+            logThis("New Tweet created with text: '" + response.tweetText + "'\n")
             getTwitter();
         });
     });
@@ -91,12 +104,15 @@ function afterTwitterPrompt() {
         }
     ]).then(function(response) {
         if (response.mainPromptChoice === 'Main Menu') {
+            logThis("After listing Twitter chose main menu.\n");
             mainPrompt();
         }
         else if (response.mainPromptChoice === 'New Tweet') {
+            logThis("After listing Twitter chose to create new Tweet.\n")
             createTweet();
         }
         else if (response.mainPromptChoice === 'Quit') {
+            logThis("After listing Twitter chose quit.\n")
             quit();
         }
         else {
@@ -119,13 +135,16 @@ function getSpotify() {
         }
     ]).then(function(response){
         if (response.spotifyRequest === ""){
+            logThis("Spotify requested song was empty - using default song.\n")
             response.spotifyRequest = "All That She Wants" // TODO verify this gives ace of base
             console.log('Since you gave no search term, you get "All That She Wants" by Ace of Base - enjoy!');
         }
         if (response.numberOfResults === "") {
+            logThis("Spotify requested number of results was empty - using default number of results.\n")
             response.numberOfResults = 1
             console.log('Since you entered no number of results we are defaulting to 1.')
         }
+        logThis("Spotify listing for '" + response.spotifyRequest + "' using number of results '" + response.numberOfResults + "'.\n")
         searchSpotify(response.spotifyRequest, response.numberOfResults);
     });
 }
@@ -152,11 +171,13 @@ function searchSpotify(thisSong, numberOfResults) {
             songCount++;
             console.log("=====")
         });
+    logThis("Finished Spotify search returning user to main menu.\n")
     mainPrompt();
     });
 }
 
 function quit() {
+    logThis("Shutting down.\n")
     console.log("\n=====\nHave a great day!\n\nGood Bye!\n=====");
 }
 
@@ -170,10 +191,12 @@ function getOMDB() {
     ]).then(function(response){
 
         if (response.movieRequest === ""){
+            logThis("OMDB movie request was empty - using default.\n")
             response.movieRequest = "Mr Nobody"
             console.log('Since you gave no search term, you get "Mr Nobody" - enjoy!');
         }
         
+        logThis("OMDB requested movie is: '" + response.movieRequest + "'\n")
         request("http://www.omdbapi.com/?t=" + response.movieRequest + "&y=&plot=short&apikey=40e9cece", function(error, response, body) {
         
           if (!error && response.statusCode === 200) {
@@ -187,6 +210,7 @@ function getOMDB() {
 			console.log("Plot: " + JSON.parse(body).Plot);
 			console.log("Actors: " + JSON.parse(body).Actors);
           }
+          logThis("Completed OMDB movie request, returning user to main menu.\n")
           mainPrompt();
         });
     });
@@ -194,6 +218,7 @@ function getOMDB() {
 
 function doWhatTheRandomFileSays() {
     console.log("wooo - crazy you - going with the random file?!");
+    logThis("Random File!  OoooOooOOOOoohhhh - it's nothing too fancy.\n")
     fs.readFile("random.txt", "utf8", function(error, data) {
         if (error) {
             return console.log(error);
@@ -206,4 +231,14 @@ function doWhatTheRandomFileSays() {
         }
     });
 }
-// TODO - log out each command as it is input into log.txt
+
+function logThis(optionChosenOrValueEntered) {
+    var now = new Date();
+    fs.appendFile('log.txt', now + ": " + optionChosenOrValueEntered, function(error, data) {
+        // If the code experiences any errors it will log the error to the console.
+        if (error) {
+          return console.log(error);
+        }
+        console.log('Logged data: ' + optionChosenOrValueEntered);
+  });
+}
