@@ -6,6 +6,7 @@ var twitterClient = new twitter(keysFile.twitterKeys);
 var Spotify = require('node-spotify-api');
 var spotifyClient = new Spotify(keysFile.spotifyKeys);
 var request = require("request") // for OMDB
+var fs = require("fs");
 
    
 var params = {screen_name: 'KyleKowalski'};
@@ -17,7 +18,7 @@ function mainPrompt() {
         {
             type: "list",
             message: "\n\n=====\nWelcome to Liri-Bot - please make a selection:\n=====",
-            choices: ["Twitter", "Spotify", "OMDB", "Do What It Says", "Quit"],
+            choices: ["Twitter", "Spotify", "OMDB", "Do What The Random File Says", "Quit"],
             name: "mainPromptChoice"
         }
     ]).then(function(response) { // TODO replace with case
@@ -30,8 +31,8 @@ function mainPrompt() {
         else if (response.mainPromptChoice === 'OMDB') {
             getOMDB();
         }
-        else if (response.mainPromptChoice === 'Do What It Says') {
-            doWhatTheTextFileSays();
+        else if (response.mainPromptChoice === 'Do What The Random File Says') {
+            doWhatTheRandomFileSays();
         }
         else if (response.mainPromptChoice === 'Quit') {
             quit();
@@ -110,36 +111,48 @@ function getSpotify() {
             type: "input",
             message: "What song (track) would you like to look up?",
             name: "spotifyRequest"
+        },
+        {
+            type: "input",
+            message: "Results you want to see?  Max returned up to this number.  (default 1 - max 20)",
+            name: "numberOfResults"
         }
     ]).then(function(response){
-        console.log("Spotify Request With : >" + response.spotifyRequest + "<")
-
         if (response.spotifyRequest === ""){
-            response.spotifyRequest = "The Sign" // TODO verify this gives ace of base
-            console.log('Since you gave no search term, you get "The Sign" by Ace of Base - enjoy!');
+            response.spotifyRequest = "All That She Wants" // TODO verify this gives ace of base
+            console.log('Since you gave no search term, you get "All That She Wants" by Ace of Base - enjoy!');
         }
+        if (response.numberOfResults === "") {
+            response.numberOfResults = 1
+            console.log('Since you entered no number of results we are defaulting to 1.')
+        }
+        searchSpotify(response.spotifyRequest, response.numberOfResults);
+    });
+}
 
-        spotifyClient.search({ type: 'track', query: response.spotifyRequest }, function(err, data) {
-            if (err) {
-                return console.log('Error occurred: ' + err);
+function searchSpotify(thisSong, numberOfResults) {
+    spotifyClient.search({ type: 'track', query: thisSong }, function(err, data) {
+        if (err) {
+            return console.log('Error occurred: ' + err);
+        }
+        var songCount = 1;
+        data.tracks.items.forEach(function(songListing){
+            if (songCount > numberOfResults) {
+                return false;
             }
-            // console.log(data)
-            var songCount = 1;
-            data.tracks.items.forEach(function(songListing){
-                let artist = songListing.album.artists[0].name;
-                let song = songListing.name;
-                let songUrl = songListing.album.artists[0].external_urls.spotify;
-                let album = songListing.album.name;
-                console.log("\n=====")
-                console.log(songCount + ". Artist: " + artist);
-                console.log(songCount + ". Song: " + song);
-                console.log(songCount + ". Song URL: " + songUrl);
-                console.log(songCount + ". Album: " + album);
-                songCount++;
-                console.log("=====")
-            });
-            mainPrompt();
+            let artist = songListing.album.artists[0].name;
+            let song = songListing.name;
+            let songUrl = songListing.album.artists[0].external_urls.spotify;
+            let album = songListing.album.name;
+            console.log("\n=====")
+            console.log(songCount + ". Artist: " + artist);
+            console.log(songCount + ". Song: " + song);
+            console.log(songCount + ". Song URL: " + songUrl);
+            console.log(songCount + ". Album: " + album);
+            songCount++;
+            console.log("=====")
         });
+    mainPrompt();
     });
 }
 
@@ -179,9 +192,19 @@ function getOMDB() {
     });
 }
 
-function doWhatTheTextFileSays() {
-    // I'm going to read the text file and do something... because... 
-    // TODO get the text file and do something
-}
+function doWhatTheRandomFileSays() {
+    console.log("wooo - crazy us - going with the random file?!");
+    fs.readFile("random.txt", "utf8", function(error, data) {
+        if (error) {
+            return console.log(error);
+        }
+        console.log(data);
+        var dataArray = data.split(",");
+        
+        if (dataArray[0] === "searchSpotify") {
+            searchSpotify(dataArray[1], dataArray[2])
+        }
 
+    });
+}
 // TODO - log out each command as it is input into log.txt
