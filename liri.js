@@ -227,7 +227,7 @@ function doWhatTheRandomFileSays() {
         var dataArray = data.split(",");
         
         if (dataArray[0] === "searchSpotify") {
-            searchSpotify(dataArray[1], dataArray[2]);
+            [dataArray[0]](dataArray[1], dataArray[2]);
         }
     });
 }
@@ -239,6 +239,5 @@ function logThis(optionChosenOrValueEntered) {
         if (error) {
           return console.log(error);
         }
-        console.log('Logged data: ' + optionChosenOrValueEntered);
   });
 }
