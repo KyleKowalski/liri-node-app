@@ -227,7 +227,7 @@ function doWhatTheRandomFileSays() {
         var dataArray = data.split(",");
         
         if (dataArray[0] === "searchSpotify") {
-            [dataArray[0]](dataArray[1], dataArray[2]);
+            searchSpotify(dataArray[1], dataArray[2]);
         }
     });
 }
