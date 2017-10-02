@@ -204,7 +204,7 @@ function getOMDB() {
             console.log("Movie title: " + JSON.parse(body).Title); 
             console.log("Year released: " + JSON.parse(body).Year);
             console.log("IMDB rating: " + JSON.parse(body).imdbRating);
-            console.log("Rotten Tomatoes rating: " + JSON.parse(body).Ratings[0].Value);
+            console.log("Rotten Tomatoes rating: " + JSON.parse(body).Ratings[1].Value);
             console.log("Country released: " + JSON.parse(body).Country);
             console.log("Language of movie: " + JSON.parse(body).Language);
 			console.log("Plot: " + JSON.parse(body).Plot);
